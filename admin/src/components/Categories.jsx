@@ -48,14 +48,14 @@ const Categories = () => {
 
   const columns = [
     { title: "SL", dataIndex: "stt", key: "stt" },
-    { title: "Category", dataIndex: "name", key: "name" },
+    { title: "Category name", dataIndex: "name", key: "name" },
+    { title: "Slug", dataIndex: "slug", key: "slug" },
     {
       title: "Image",
       dataIndex: "image",
       key: "image",
       render: (row) => <Image width={120} src={row} />,
     },
-    { title: "Slug", dataIndex: "slug", key: "slug" },
     { title: "Created Date", dataIndex: "createdAt", key: "createdAt" },
     {
       title: "Action",

@@ -4,6 +4,7 @@ import { getAllCategory } from "../../services/category";
 
 const ExploreMenu = () => {
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -23,6 +24,10 @@ const ExploreMenu = () => {
     fetchCategories();
   }, []);
 
+  const handleCategoryClick = (item) => {
+    setSelectedCategory(prev => prev === item.menu_name ? null : item.menu_name);
+  };
+
   return (
     <div className="explore-menu" id="explore-menu">
       <h1>Explore our menu</h1>
@@ -32,8 +37,12 @@ const ExploreMenu = () => {
         one delicious meal at a time.
       </p>
       <div className="explore-menu-list">
-        {categories.map((category) => (
-          <div key={category._id} className="explore-menu-list-item">
+        {categories.map((category, index) => (
+          <div
+            onClick={() => handleCategoryClick(category)}
+            key={index}
+            className={`explore-menu-list-item ${selectedCategory === category.menu_name ? 'selected' : ''}`}
+          >
             <img src={category.image} alt="" />
             <p>{category.name}</p>
           </div>

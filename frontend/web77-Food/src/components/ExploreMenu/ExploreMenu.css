@@ -21,19 +21,20 @@
   gap: 30px;
   text-align: center;
   margin: 20px 0px;
+  padding: 20px 0px 0px 0px;
   overflow-x: scroll;
 }
 
 .explore-menu-list::-webkit-scrollbar {
-  width: 0; 
+  width: 0;
 }
 
 .explore-menu-list::-webkit-scrollbar-thumb {
-  background: rgb(217, 217, 217); 
+  background: rgb(217, 217, 217);
 }
 
 .explore-menu-list::-webkit-scrollbar-thumb:hover {
-  background: #d3d3d3; 
+  background: #d3d3d3;
 }
 
 .explore-menu-list-item img {

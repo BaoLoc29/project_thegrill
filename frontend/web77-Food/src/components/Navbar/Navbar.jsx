@@ -8,6 +8,8 @@ import {
   removeUserFromLocalStorage,
 } from "../../utils/localstorage";
 
+import { HiOutlineSearch } from "react-icons/hi";
+
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("menu");
   const { getTotalCartAmount } = useContext(StoreContext);
@@ -57,6 +59,11 @@ const Navbar = ({ setShowLogin }) => {
       </ul>
       <div className="navbar-right">
         <img src={assets.search_icon} alt="" />
+        {/* <div class="nav-search">
+          <input type="text" placeholder="Search..." class="input-search" />
+          <img src={assets.search_icon} alt="" width={25} class="search-icon" />
+        </div> */}
+
         <div className="navbar-search-icon">
           <Link to="/cart">
             <img src={assets.basket_icon} alt="" />
@@ -73,7 +80,7 @@ const Navbar = ({ setShowLogin }) => {
                 <img src={assets.bag_icon} alt="" />
                 <p>Orders</p>
               </li>
-              {/* <hr /> */}
+              <hr />
               <li onClick={handleLogout}>
                 <img src={assets.logout_icon} alt="" />
                 <p>Logout</p>

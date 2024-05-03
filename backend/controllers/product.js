@@ -172,8 +172,10 @@ export const getProductById = async (req, res) => {
 
 export const getAllProduct = async (req, res) => {
     try {
+
+        const result = await Product.find()
         const countProduct = await Product.countDocuments()
-        return res.status(200).json({ countProduct })
+        return res.status(200).json({ result, countProduct })
     } catch (error) {
         return res.status(500).json({ error })
     }

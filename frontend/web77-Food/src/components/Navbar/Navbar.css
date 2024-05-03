@@ -105,6 +105,27 @@
 .nav-profile-dropdown li:hover {
   color: tomato;
 }
+
+.nav-search {
+  position: relative;
+}
+
+.input-search {
+  padding: 10px 30px 10px 10px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  font-size: 16px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
 @media (max-width: 1050px) {
   .navbar .logo {
     width: 140px;

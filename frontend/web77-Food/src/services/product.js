@@ -10,7 +10,7 @@ const getProductById = (productId) => {
     return axiosInstance.get(`/product/${productId}`)
 }
 const getAllProduct = () => {
-    return axiosInstance.get("/product/get-all-product");
+    return axiosInstance.get("/product/getAllProduct");
 }
 
 export {

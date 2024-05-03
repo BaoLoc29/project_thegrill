@@ -4,6 +4,10 @@ import joi from "joi"
 import jwt from "jsonwebtoken"
 
 const tokenSecret = 'secret'
+// Hàm định dạng ngày tạo
+const formatCreatedAt = (date) => {
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 export const login = async (req, res) => {
     const { compareSync } = bcrypt
     try {
@@ -12,14 +16,14 @@ export const login = async (req, res) => {
 
         const loginSchema = joi.object({
             email: joi.string().email().min(3).max(32).required().messages({
-                "string.email": "Email không đúng định dạng",
-                "string.min": "Tối thiếu là 3 ký tự",
-                "string.max": "Tối đa là là 32 ký tự"
+                "string.email": "Invalid email format",
+                "string.min": "Email must be at least 3 characters",
+                "string.max": "Email must not exceed 32 characters"
             }),
             password: joi.string().min(6).max(32).required().messages({
-                "string.password": "Mật khẩu không đúng định dạng",
-                "string.min": "Tối thiếu là 6 ký tự",
-                "string.max": "Tối đa là là 32 ký tự"
+                "string.password": "Invalid password format",
+                "string.min": "Password must be at least 6 characters",
+                "string.max": "Password must not exceed 32 characters"
             }),
         })
 
@@ -33,7 +37,7 @@ export const login = async (req, res) => {
         const findUser = await User.findOne({ email }).lean()
         if (!findUser) {
             return res.status(401).json({
-                error: "Không tìm thấy người dùng"
+                error: "User not found"
             })
         }
 
@@ -51,103 +55,101 @@ export const login = async (req, res) => {
 
         if (!checkPassword) {
             return res.status(401).json({
-                error: "Sai mật khẩu"
+                error: "Incorrect password"
             })
         }
         if (findUser) {
             return res.status(200).json({
-                message: "Đăng nhập thành công",
+                message: "Login successful",
                 user: returnUser,
                 accessToken
             })
         }
     } catch (error) {
-        return res.status(500).json(error)
+        console.error(error);
+        if (error.details) {
+            // Nếu có lỗi từ Joi, trả về thông báo lỗi từ Joi
+            const errorMessage = error.details.map((detail) => detail.message).join(', ');
+            return res.status(400).json({ message: errorMessage });
+        } else {
+            // Nếu có lỗi khác, trả về thông báo lỗi mặc định
+            return res.status(500).json({ message: "Failed to Sign In" });
+        }
     }
 }
 export const signUp = async (req, res) => {
-    const { hashSync, genSaltSync } = bcrypt
-    try {
-        const { name, email, password, role, age, phoneNumber, address } = req.body
+    const { name, email, password, age, phoneNumber, address } = req.body;
 
-        // schema joi
+    try {
+        // Schema joi
         const signupSchema = joi.object({
             name: joi.string().max(32).required().messages({
-                "string.max": "Name không được quá 32 kí tự",
-                "string.name": "Name không đúng định dạng",
-                "any.required": "Vui lòng nhập Name"
+                "string.max": "Name must not exceed 32 characters",
+                "any.required": "Please enter your Name"
             }),
             email: joi.string().email().max(32).required().messages({
-                "string.email": "Email không đúng định dạng",
-                "string.max": "Email tối đa là 32 ký tự",
-
+                "string.email": "Invalid email format",
+                "string.max": "Email must not exceed 32 characters"
             }),
             password: joi.string().min(6).max(32).required().messages({
-                "string.min": "Password không được nhỏ hơn 6 kí tự",
-                "string.max": "Password không được vượt quá 32 kí tự",
-                "string.password": "Password không đúng định dạng",
-                "any.required": "Vui lòng nhập Password"
+                "string.min": "Password must be at least 6 characters",
+                "string.max": "Password must not exceed 32 characters",
+                "any.required": "Please enter your Password"
             }),
-            role: joi.string().required().message({
-                "string.role": "Role không đúng định dạng",
-                "any.required": "Vui lòng nhập Role"
+            age: joi.number().required().messages({
+                "any.required": "Please enter your Age"
             }),
-            age: joi.number().required().message({
-                "number.age": "Age không đúng định dạng của nó",
-                "any.required": "Vui lòng nhập Age"
+            phoneNumber: joi.string().max(10).required().messages({
+                "string.max": "Phone number must not exceed 10 digits",
+                "any.required": "Please enter your Phone Number"
             }),
-            phoneNumber: joi.string().max(10).required().message({
-                "string.phoneNumber": "Phone number phải là chữ số",
-                "string.max": "Phone number không được vượt quá 10 chữ số",
-                "any.required": "Vui lòng nhập Phone Number"
-            }),
-            address: joi.string().min(10).required().message({
-                "string.min": "Address không được bé hơn 10 chữ cái",
-                "any.required": "Vui lòng nhập Address"
+            address: joi.string().min(10).required().messages({
+                "string.min": "Address must be at least 10 characters",
+                "any.required": "Please enter your Address"
             })
-        })
+        });
 
-        const { error } = signupSchema.validate({ name, email, password, role, age, phoneNumber, address });
-        if (error) {
-            return res.status(400).json({
-                error: error.details[0].message
-            })
-        }
+        await signupSchema.validateAsync({ name, email, password, age, phoneNumber, address });
 
-        const findUser = await User.findOne({ email })
+        const findUser = await User.findOne({ email });
 
         if (findUser) {
-            return res.status(409).json({
-                message: "Người dùng đã tồn tại"
-            })
+            return res.status(409).json({ message: "Email already exists" });
         }
 
-        const salt = genSaltSync()
-        const hashPassword = hashSync(password, salt)
+        const salt = bcrypt.genSaltSync();
+        const hashPassword = bcrypt.hashSync(password, salt);
 
         const user = await User.create({
             email,
             password: hashPassword,
             name,
-            role,
+            role: "customer",
             age,
             phoneNumber,
             address
-        })
+        });
 
         // Loại bỏ trường password từ kết quả trả về
-        const userWithoutPassword = user.toObject()
-        delete userWithoutPassword.password
+        const userWithoutPassword = user.toObject();
+        delete userWithoutPassword.password;
 
         return res.status(200).json({
-            message: "Tạo người dùng thành công",
+            message: "Account registration successful!",
             user: userWithoutPassword
-        })
-
+        });
     } catch (error) {
-        return res.status(500).json({ error: "Đã xảy ra lỗi trong quá trình xử lý yêu cầu." })
+        console.error(error);
+        if (error.details) {
+            // Nếu có lỗi từ Joi, trả về thông báo lỗi từ Joi
+            const errorMessage = error.details.map((detail) => detail.message).join(', ');
+            return res.status(400).json({ message: errorMessage });
+        } else {
+            // Nếu có lỗi khác, trả về thông báo lỗi mặc định
+            return res.status(500).json({ message: "Failed to sign up" });
+        }
     }
-}
+};
 export const createUser = async (req, res) => {
     const { hashSync, genSaltSync } = bcrypt
     try {
@@ -167,9 +169,12 @@ export const createUser = async (req, res) => {
 
         const result = await User.create({ ...data, password: hashPassword })
 
+        const formattedDate = formatCreatedAt(result.createdAt);
+
         return res.status(201).json({
             message: "Thêm người dùng thành công",
-            result
+            ...result.toObject(),
+            createdAt: formattedDate
         })
     } catch (error) {
         console.log(error)
@@ -186,7 +191,13 @@ export const getPagingUser = async (req, res) => {
         const countusers = await User.countDocuments({ role: "customer" })
         const totalPage = Math.ceil(countusers / query.pageSize)
 
-        return res.status(200).json({ users, totalPage, count: countusers })
+        // Format createdAt for each user
+        const formattedUsers = users.map(user => ({
+            ...user.toObject(),
+            createdAt: formatCreatedAt(user.createdAt)
+        }));
+
+        return res.status(200).json({ users: formattedUsers, totalPage, count: countusers })
     } catch (error) {
         return res.status(500).json(error)
     }
@@ -247,7 +258,10 @@ export const editUser = async (req, res) => {
 
         return res.status(200).json({
             message: "Cập nhật thành công",
-            user: updateUser
+            user: {
+                ...updateUser.toObject(),
+                createdAt: formatCreatedAt(updateUser.createdAt)
+            }
         })
     } catch (error) {
         return res.status(500).json({ message: error.message })
@@ -367,7 +381,13 @@ export const getPagingAdmin = async (req, res) => {
         const countAdmins = await User.countDocuments({ role: "admin" })
         const totalPage = Math.ceil(countAdmins / query.pageSize)
 
-        return res.status(200).json({ admins, totalPage, count: countAdmins })
+        // Format createdAt for each admin
+        const formattedAdmins = admins.map(admin => ({
+            ...admin.toObject(),
+            createdAt: formatCreatedAt(admin.createdAt)
+        }));
+
+        return res.status(200).json({ admins: formattedAdmins, totalPage, count: countAdmins })
     } catch (error) {
         return res.status(500).json(error)
     }
@@ -394,7 +414,13 @@ export const searchUser = async (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy người dùng!" });
         }
 
-        return res.status(200).json({ customers });
+        // Format createdAt for each customer
+        const formattedCustomers = customers.map(customer => ({
+            ...customer.toObject(),
+            createdAt: formatCreatedAt(customer.createdAt)
+        }));
+
+        return res.status(200).json({ customers: formattedCustomers });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -420,8 +446,13 @@ export const searchAdmin = async (req, res) => {
         if (!admins || admins.length === 0) {
             return res.status(404).json({ message: "Không tìm thấy người dùng!" });
         }
+        // Format createdAt for each admin
+        const formattedAdmins = admins.map(admin => ({
+            ...admin.toObject(),
+            createdAt: formatCreatedAt(admin.createdAt)
+        }));
 
-        return res.status(200).json({ admins });
+        return res.status(200).json({ admins: formattedAdmins });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }

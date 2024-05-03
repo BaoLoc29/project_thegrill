@@ -22,11 +22,6 @@ import {
   searchAdmin,
 } from "../services/user";
 
-const { Option } = Select;
-const options = [
-  { value: "name", label: "Name" },
-  { value: "email", label: "E-mail" },
-];
 const Employees = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,6 +35,11 @@ const Employees = () => {
   const [selectedOption, setSelectedOption] = useState("name");
   const [searchResults, setSearchResults] = useState([]);
   const [initialData, setInitialData] = useState([]);
+  // const { Option } = Select;
+  const options = [
+    { value: "name", label: "Name" },
+    { value: "email", label: "E-mail" },
+  ];
 
   const handleOpenEditModal = (userId) => {
     setModalCreateUser(true);
@@ -51,43 +51,13 @@ const Employees = () => {
     setModalCreateUser(false);
     setSelectedUser(null);
   };
-  const handleDeleteUser = async (userId) => {
-    try {
-      setLoading(true);
-      const result = await deleteUser(userId);
-      console.log(result);
-      setUsers(users.filter((user) => user._id !== userId));
-      toast.success("Deleted user successfully!");
-    } catch (error) {
-      console.log(error);
-      toast.error("Delete user failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      let searchResults = [];
-      if (searchQuery.trim() !== "") {
-        const response = await searchAdmin(searchQuery, selectedOption);
-        searchResults = response.data.admins;
-      }
-      setSearchResults(searchResults);
-    } catch (error) {
-      toast.error("User not found!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchResults([]);
-    setUsers(initialData);
-  };
   const columns = [
+    {
+      title: "SL",
+      dataIndex: "stt",
+      key: "stt",
+    },
     {
       title: "UserName",
       dataIndex: "name",
@@ -107,6 +77,11 @@ const Employees = () => {
       title: "Phone",
       dataIndex: "phoneNumber",
       key: "phoneNumber",
+    },
+    {
+      title: "Created Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
     },
     {
       title: "Address",
@@ -144,25 +119,105 @@ const Employees = () => {
     try {
       setLoading(true);
       const result = await getPagingAdmin({ pageSize, pageIndex });
-      setUsers(result.data.admins);
-      setInitialData(result.data.admins);
-      setTotalPages(result.data.totalPage);
+
+      const updateAdmin = result.data.admins.map((admin, index) => {
+        return {
+          ...admin,
+          stt: index + 1 + pageSize * (pageIndex - 1),
+          createdAt: admin.createdAt,
+        };
+      });
+      setUsers(updateAdmin);
+      setInitialData(updateAdmin);
+      setTotalPages(result.data.totalPages);
       setTotalDoc(result.data.count);
     } catch (error) {
+      console.log(totalPages);
       toast.error("No response was received from the user list!");
     } finally {
       setLoading(false);
     }
   };
+  const handleDeleteUser = async (userId) => {
+    try {
+      setLoading(true);
+      await deleteUser(userId);
+      // setUsers(users.filter((user) => user._id !== userId));
+      // Tìm vị trí trong danh sách search
+      const index = searchResults.findIndex((admin) => admin._id === userId);
+      if (index !== -1) {
+        // Xóa sản phẩm khỏi danh sách search và cập nhật lại số thứ tự
+        setSearchResults((prevResults) =>
+          prevResults
+            .filter((admin) => admin._id !== userId)
+            .map((admin, index) => ({
+              ...admin,
+              stt: index + 1,
+            }))
+        );
+      }
 
+      // Tìm vị trí của sản phẩm trong danh sách gốc
+      const originalIndex = users.findIndex((admin) => admin._id === userId);
+      if (originalIndex !== -1) {
+        // Xóa sản phẩm khỏi danh sách gốc và cập nhật lại số thứ tự
+        setUsers((prevProducts) =>
+          prevProducts
+            .filter((admin) => admin._id !== userId)
+            .map((admin, index) => ({
+              ...admin,
+              stt: index + 1,
+            }))
+        );
+      }
+
+      toast.success("Deleted user successfully!");
+      handleClearSearch();
+      getUsers();
+    } catch (error) {
+      console.log(error);
+      toast.error("Delete user failed!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      let searchResults = [];
+      if (searchQuery.trim() !== "") {
+        const response = await searchAdmin(searchQuery, selectedOption);
+        // searchResults = response.data.admins;
+        searchResults = response.data.admins.map((admin, index) => ({
+          ...admin,
+          stt: index + 1,
+        }));
+      }
+      setSearchResults(searchResults);
+    } catch (error) {
+      toast.error("User not found!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setUsers(initialData);
+  };
   const handleCreateUser = async (value) => {
     try {
       setLoading(true);
       if (!selectedUser) {
         const result = await createUser(value);
-        let newUser = users;
-        newUser.pop();
-        setUsers([result.data.result, ...users]);
+        const newUser = result.data.result;
+        const updatedAdmins = [newUser, ...users].map((user, index) => ({
+          ...user,
+          stt: index + 1,
+        }));
+        setUsers(updatedAdmins);
         toast.success("Added new user successfully!");
       } else {
         const result = await editUser(selectedUser, value);
@@ -177,6 +232,8 @@ const Employees = () => {
         toast.success("Updated new user successfully!");
         setSelectedUser(null);
       }
+      handleClearSearch();
+      getUsers();
       setModalCreateUser(false);
       form.resetFields();
     } catch (error) {
@@ -196,7 +253,7 @@ const Employees = () => {
   return (
     <div className="h-[37.45rem]">
       <div className="flex justify-between items-center px-2 pb-4 pr-4 pl-4 pt-0 ">
-        <h1 className="text-gray-500 text-xl">Admin List</h1>
+        <h1 className="text-gray-500 text-xl">List Admin</h1>
         <Space.Compact className="w-[35rem] relative">
           <Select
             defaultValue="name"
@@ -243,7 +300,9 @@ const Employees = () => {
       <ModalCreateAdmins
         form={form}
         loading={loading}
-        title={selectedUser ? "Edit Admin Information" : "Add Admin Information"}
+        title={
+          selectedUser ? "Edit Admin Information" : "Add Admin Information"
+        }
         isModalOpen={modalCreateUser}
         handleCancel={handelCloseModal}
         handleOk={handleCreateUser}

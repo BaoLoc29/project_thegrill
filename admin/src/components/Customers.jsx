@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Space,
   Table,
@@ -22,13 +22,6 @@ import {
   searchUser,
 } from "../services/user";
 
-const { Option } = Select;
-
-const options = [
-  { value: "name", label: "Name" },
-  { value: "email", label: "E-mail" },
-];
-
 const Customers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +35,12 @@ const Customers = () => {
   const [selectedOption, setSelectedOption] = useState("name");
   const [searchResults, setSearchResults] = useState([]);
   const [initialData, setInitialData] = useState([]);
+  // const { Option } = Select;
 
+  const options = [
+    { value: "name", label: "Name" },
+    { value: "email", label: "E-mail" },
+  ];
   const handleOpenEditModal = (userId) => {
     setModalCreateUser(true);
     setSelectedUser(userId);
@@ -54,52 +52,13 @@ const Customers = () => {
     setSelectedUser(null);
   };
 
-  const handleDeleteUser = async (userId) => {
-    try {
-      setLoading(true);
-      await deleteUser(userId);
-      setUsers(users.filter((user) => user._id !== userId));
-      toast.success("Deleted user successfully!");
-    } catch (error) {
-      toast.error("Delete user failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      let searchResults = [];
-      if (searchQuery.trim() !== "") {
-        const response = await searchUser(searchQuery, selectedOption);
-        searchResults = response.data.customers;
-      }
-      setSearchResults(searchResults);
-    } catch (error) {
-      toast.error("User not found!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchResults([]);
-    setUsers(initialData);
-  };
-
   const columns = [
+    { title: "SL", dataIndex: "stt", key: "stt" },
     { title: "UserName", dataIndex: "name", key: "name" },
     { title: "E-mail", dataIndex: "email", key: "email" },
     { title: "Age", dataIndex: "age", key: "age" },
     { title: "Phone", dataIndex: "phoneNumber", key: "phoneNumber" },
-    // thêm ở đây
-    // {
-    //   title: "Created Date",
-    //   dataIndex: "createdAt",
-    //   key: "createdAt",
-    // },
+    { title: "Created Date", dataIndex: "createdAt", key: "createdAt" },
     { title: "Address", dataIndex: "address", key: "address" },
     {
       title: "Action",
@@ -125,32 +84,53 @@ const Customers = () => {
     },
   ];
   const [form] = Form.useForm();
-  const getUsers = async () => {
+  const getUsers = useCallback(async () => {
     try {
       setLoading(true);
       const result = await getPagingUser({ pageSize, pageIndex });
-      // const updateCustomer = result.data.users.map((user) => {
-      //   const createdAt = new Date(user.createdAt);
-      //   createdAt.setHours(0, 0, 0, 0);
-      //   return {
-      //     ...user,
-      //     createdAt: createdAt.toLocaleDateString(),
-      //   };
-      // });
-      // setUsers(updateCustomer);
-      // setInitialData(updateCustomer);
-      // setTotalPages(result.data.totalPage);
-      // setTotalDoc(result.data.count);
-      setUsers(result.data.users);
-      setInitialData(result.data.users);
-      setTotalPages(result.data.totalPage);
+      const updateCustomer = result.data.users.map((user, index) => {
+        return {
+          ...user,
+          stt: index + 1 + pageSize * (pageIndex - 1),
+          createdAt: user.createdAt,
+        };
+      });
+      setUsers(updateCustomer);
+      setInitialData(updateCustomer);
+      setTotalPages(result.data.totalPages);
       setTotalDoc(result.data.count);
-      console.log(totalPages);
     } catch (error) {
-      toast.error("No response was received from the user list!");
+      console.log(totalPages);
+      toast.error("Error when getting customers");
     } finally {
       setLoading(false);
     }
+  }, [pageSize, pageIndex]);
+
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      let searchResults = [];
+      if (searchQuery.trim() !== "") {
+        const response = await searchUser(searchQuery, selectedOption);
+        // searchResults = response.data.customers;
+        searchResults = response.data.customers.map((customer, index) => ({
+          ...customer,
+          stt: index + 1,
+        }));
+      }
+      setSearchResults(searchResults);
+    } catch (error) {
+      toast.error("Customer not found!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setUsers(initialData);
   };
 
   const handleCreateUser = async (value) => {
@@ -158,10 +138,13 @@ const Customers = () => {
       setLoading(true);
       if (!selectedUser) {
         const result = await createUser(value);
-        let newUser = users;
-        newUser.pop();
-        setUsers([result.data.result, ...users]);
-        toast.success("Added new user successfully!");
+        const newUser = result.data;
+        const updatedUsers = [newUser, ...users].map((user, index) => ({
+          ...user,
+          stt: index + 1,
+        }));
+        setUsers(updatedUsers);
+        toast.success("Created customer successfully!");
       } else {
         const result = await editUser(selectedUser, value);
         setUsers(
@@ -172,24 +155,66 @@ const Customers = () => {
             return user;
           })
         );
-        toast.success("Updated new user successfully!");
+        toast.success("Updated customer successfully!");
         setSelectedUser(null);
       }
+      handleClearSearch();
+      getUsers();
       setModalCreateUser(false);
       form.resetFields();
     } catch (error) {
-      console.log(error);
       toast.error(
-        selectedUser ? "Update new users failed" : "Add new users failed"
+        selectedUser ? "Update customer failed" : "Create customer failed"
       );
     } finally {
       setLoading(false);
     }
   };
+  const handleDeleteUser = async (userId) => {
+    try {
+      setLoading(true);
+      await deleteUser(userId);
+      // setUsers(users.filter((user) => user._id !== userId));
 
+      // Tìm vị trí trong danh sách search
+      const index = searchResults.findIndex((user) => user._id === userId);
+      if (index !== -1) {
+        // Xóa khỏi danh sách search và cập nhật lại số thứ tự
+        setSearchResults((prevResults) =>
+          prevResults
+            .filter((user) => user._id !== userId)
+            .map((user, index) => ({
+              ...user,
+              stt: index + 1,
+            }))
+        );
+      }
+
+      // Tìm vị trí của sản phẩm trong danh sách gốc
+      const originalIndex = users.findIndex((user) => user._id === userId);
+      if (originalIndex !== -1) {
+        // Xóa sản phẩm khỏi danh sách gốc và cập nhật lại số thứ tự
+        setUsers((prevUsers) =>
+          prevUsers
+            .filter((user) => user._id !== userId)
+            .map((user, index) => ({
+              ...user,
+              stt: index + 1,
+            }))
+        );
+      }
+      handleClearSearch();
+      getUsers();
+      toast.success("Successfully deleted customer!");
+    } catch (error) {
+      toast.error("Failed delete customer!");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     getUsers();
-  }, [pageSize, pageIndex]);
+  }, [pageSize, pageIndex, getUsers]);
 
   return (
     <div className="h-[37.45rem]">
@@ -217,7 +242,7 @@ const Customers = () => {
         </Space.Compact>
 
         <Button type="primary" onClick={() => setModalCreateUser(true)}>
-          Add Customer
+          Create Customer
         </Button>
       </div>
       <Table
@@ -241,7 +266,7 @@ const Customers = () => {
       <ModalCreateCustomers
         form={form}
         loading={loading}
-        title={selectedUser ? "Edit User Information" : "Add User Information"}
+        title={selectedUser ? "Edit User Information" : "Create User Information"}
         isModalOpen={modalCreateUser}
         handleCancel={handelCloseModal}
         handleOk={handleCreateUser}

@@ -24,10 +24,10 @@ const Login = () => {
       dispatch(loginAction({ user: result.data.user }));
       saveTokenToLocalStorage(result.data.accessToken);
       saveUserToLocalStorage(result.data.user);
-      toast.success("Đăng nhập thành công");
+      toast.success("Sign in successfully!");
       naviagate("/");
     } catch (error) {
-      toast.error("Đăng nhập thất bại");
+      toast.error("Sign in faild!");
     } finally {
       setLoading(false);
     }
@@ -62,11 +62,11 @@ const Login = () => {
               rules={[
                 {
                   required: true,
-                  message: "Vui lòng nhập email!",
+                  message: "Please input your email!",
                 },
                 {
                   min: 6,
-                  message: "Email phải trên 6 ký tự",
+                  message: "Email must be at least 6 characters!",
                 },
               ]}
             >
@@ -81,11 +81,11 @@ const Login = () => {
               rules={[
                 {
                   required: true,
-                  message: "Vui lòng nhập mật khẩu!",
+                  message: "Please input your password!",
                 },
                 {
                   min: 6,
-                  message: "Mật khẩu phải từ 6 ký tự trở lên!",
+                  message: "Password must be at least 6 characters!",
                 },
               ]}
             >

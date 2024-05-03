@@ -11,24 +11,26 @@ const ModalCreateCustomers = ({
   handleOk,
   selectedUser,
 }) => {
-  const getUser = async () => {
-    try {
-      const result = await getUserById(selectedUser);
-      form.setFieldsValue({
-        name: result.data.user.name,
-        email: result.data.user.email,
-        role: result.data.user.role,
-        age: result.data.user.age,
-        phoneNumber: result.data.user.phoneNumber,
-        address: result.data.user.address,
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
   useEffect(() => {
+    const getUser = async () => {
+      try {
+        const result = await getUserById(selectedUser);
+        form.setFieldsValue({
+          name: result.data.user.name,
+          email: result.data.user.email,
+          role: result.data.user.role,
+          age: result.data.user.age,
+          phoneNumber: result.data.user.phoneNumber,
+          address: result.data.user.address,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     if (selectedUser) getUser();
-  }, [selectedUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser, form]);
   return (
     <Modal
       title={null}
@@ -37,7 +39,6 @@ const ModalCreateCustomers = ({
       loading={loading}
       onCancel={handleCancel}
       width={600}
-      style={{ top: 60 }}
     >
       <div className="text-center text-xl font-bold">
         <h2>{title}</h2>
@@ -61,12 +62,8 @@ const ModalCreateCustomers = ({
           }}
           rules={[
             {
-              type: "text",
-              message: "Invalid format for user name!",
-            },
-            {
               required: true,
-              message: "User name cannot be empty!",
+              message: "UserName is not empty!",
             },
           ]}
         >
@@ -101,10 +98,6 @@ const ModalCreateCustomers = ({
           }}
           rules={[
             {
-              type: "text",
-              message: "Please select a role!",
-            },
-            {
               required: true,
               message: "Please select a role!",
             },
@@ -123,12 +116,8 @@ const ModalCreateCustomers = ({
           }}
           rules={[
             {
-              type: "text",
-              message: "Invalid format for age!",
-            },
-            {
               required: true,
-              message: "Age cannot be empty!",
+              message: "Age is not empty!",
             },
           ]}
         >
@@ -156,7 +145,7 @@ const ModalCreateCustomers = ({
             },
             {
               required: true,
-              message: "Phone number cannot be empty!",
+              message: "Phone number is not empty!",
             },
           ]}
         >
@@ -171,12 +160,8 @@ const ModalCreateCustomers = ({
           }}
           rules={[
             {
-              type: "text",
-              message: "Invalid format for address!",
-            },
-            {
               required: true,
-              message: "Address cannot be empty!",
+              message: "Address is not empty!",
             },
           ]}
         >

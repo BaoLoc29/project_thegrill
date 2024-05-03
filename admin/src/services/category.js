@@ -18,9 +18,12 @@ const searchCategory = (keyword) => {
 const getCategoryById = (categoryId) => {
     return axiosInstanceAuth.get(`/category/${categoryId}`)
 }
-
+const getAllCategory = () => {
+    return axiosInstanceAuth.get(`/category`)
+}
 export {
     getPagingCategory,
+    getAllCategory,
     createCategory,
     editCategory,
     deleteCategory,

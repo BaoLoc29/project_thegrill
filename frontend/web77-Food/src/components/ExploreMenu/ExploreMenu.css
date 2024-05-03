@@ -25,7 +25,15 @@
 }
 
 .explore-menu-list::-webkit-scrollbar {
-  display: none;
+  width: 0; 
+}
+
+.explore-menu-list::-webkit-scrollbar-thumb {
+  background: rgb(217, 217, 217); 
+}
+
+.explore-menu-list::-webkit-scrollbar-thumb:hover {
+  background: #d3d3d3; 
 }
 
 .explore-menu-list-item img {

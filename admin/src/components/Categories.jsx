@@ -6,6 +6,7 @@ import {
   Input,
   Popconfirm,
   Form,
+  Image,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { FaEdit } from "react-icons/fa";
@@ -45,36 +46,17 @@ const Categories = () => {
     setSelectedCategory(null);
   };
 
-  const handleDeleteCategory = async (categoryId) => {
-    try {
-      setLoading(true);
-      await deleteCategory(categoryId);
-      setCategories(
-        categories.filter((category) => category._id !== categoryId)
-      );
-      toast.success("Successfully deleted category!");
-    } catch (error) {
-      toast.error("Delete failed category!");
-    } finally {
-      setLoading(false);
-    }
-  };
   const columns = [
-    { title: "Category name", dataIndex: "name", key: "name" },
+    { title: "SL", dataIndex: "stt", key: "stt" },
+    { title: "Category", dataIndex: "name", key: "name" },
     {
       title: "Image",
       dataIndex: "image",
       key: "image",
-      render: (row) => <img width={120} src={row} />,
+      render: (row) => <Image width={120} src={row} />,
     },
     { title: "Slug", dataIndex: "slug", key: "slug" },
-    // Thêm ở đây
-    // { title: "Product Count", dataIndex: "productCount", key: "productCount" },
-    // {
-    //   title: "Created Date",
-    //   dataIndex: "createdAt",
-    //   key: "createdAt",
-    // },
+    { title: "Created Date", dataIndex: "createdAt", key: "createdAt" },
     {
       title: "Action",
       key: "action",
@@ -104,10 +86,18 @@ const Categories = () => {
       setLoading(true);
       const result = await getPagingCategory({ pageSize, pageIndex });
 
-      // Nếu muốn lấy ngày tạo => Customer
-      setCategories(result.data.categories);
-      setInitialData(result.data.categories);
-      setTotalPages(result.data.totalPage);
+      const updatedCategories = result.data.categories.map(
+        (category, index) => {
+          return {
+            ...category,
+            stt: index + 1 + pageSize * (pageIndex - 1),
+            createdAt: category.createdAt,
+          };
+        }
+      );
+      setCategories(updatedCategories);
+      setInitialData(updatedCategories);
+      setTotalPages(result.data.totalPages);
       setTotalDoc(result.data.count);
     } catch (error) {
       console.log(totalPages);
@@ -122,7 +112,11 @@ const Categories = () => {
       let searchResults = [];
       if (searchQuery.trim() !== "") {
         const response = await searchCategory(searchQuery);
-        searchResults = response.data.categories;
+        // searchResults = response.data.categories;
+        searchResults = response.data.categories.map((category, index) => ({
+          ...category,
+          stt: index + 1,
+        }));
       }
       setSearchResults(searchResults);
     } catch (error) {
@@ -144,42 +138,97 @@ const Categories = () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("image", file);
+
+      let result;
       if (!selectedCategory) {
         const result = await createCategory(formData);
-        let newCategory = categories;
-        newCategory.pop();
-        setCategories([result.data.data, ...newCategory]);
-        toast.success("Added category successfully!");
-      } else {
-        const result = await editCategory(selectedCategory, formData);
-        setCategories(
-          categories.map((category) => {
-            if (category._id === selectedCategory) {
-              return {
-                ...category,
-                name: result.data.category.name,
-                image: result.data.category.image,
-                slug: result.data.category.slug,
-              };
-            }
-            return category;
+        const newCategory = result.data.data;
+
+        const updatedCategories = [newCategory, ...categories].map(
+          (category, index) => ({
+            ...category,
+            stt: index + 1,
           })
         );
-        toast.success("Updated category successfully!");
+        setCategories(updatedCategories);
+        toast.success("Created successfully!");
+      } else {
+        result = await editCategory(selectedCategory, formData);
+        setCategories((prevCategories) =>
+          prevCategories.map((category) =>
+            category._id === selectedCategory
+              ? {
+                  ...category,
+                  name: result.data.category.name,
+                  image: result.data.category.image,
+                  slug: result.data.category.slug,
+                }
+              : category
+          )
+        );
+        toast.success("Updated successfully!");
         setSelectedCategory(null);
       }
+      handleClearSearch();
+      getCategories();
       setModalCreateCategory(false);
       form.resetFields();
     } catch (error) {
-      console.log(error);
-      toast.error(
-        selectedCategory ? "Update category failed" : "Add category failed"
-      );
+      console.error(error);
+      toast.error(selectedCategory ? "Update failed" : "Create failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      setLoading(true);
+      await deleteCategory(categoryId);
+      // setCategories(
+      //   categories.filter((category) => category._id !== categoryId)
+      // );
+      // Tìm vị trí của sản phẩm trong danh sách search
+      const index = searchResults.findIndex(
+        (category) => category._id === categoryId
+      );
+      if (index !== -1) {
+        // Xóa sản phẩm khỏi danh sách search và cập nhật lại số thứ tự
+        setSearchResults((prevResults) =>
+          prevResults
+            .filter((category) => category._id !== categoryId)
+            .map((category, index) => ({
+              ...category,
+              stt: index + 1,
+            }))
+        );
+      }
+
+      // Tìm vị trí của danh muc trong danh sách gốc
+      const originalIndex = categories.findIndex(
+        (category) => category._id === categoryId
+      );
+      if (originalIndex !== -1) {
+        // Xóa danh muc khỏi danh sách gốc và cập nhật lại số thứ tự
+        setCategories((prevCategories) =>
+          prevCategories
+            .filter((category) => category._id !== categoryId)
+            .map((category, index) => ({
+              ...category,
+              stt: index + 1,
+            }))
+        );
+      }
+
+      toast.success("Successfully deleted category!");
+      handleClearSearch();
+      getCategories();
+    } catch (error) {
+      toast.error("Failed to delete category!");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     getCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,10 +237,10 @@ const Categories = () => {
   return (
     <div className="h-[37.45rem]">
       <div className="flex justify-between items-center px-2 pb-4 pr-4 pl-4 pt-0 ">
-        <h1 className="text-gray-500 text-xl">Product Categories</h1>
+        <h1 className="text-gray-500 text-xl">Explore our menu</h1>
         <Space.Compact className="w-[35rem] relative">
           <Input
-            placeholder="Enter the search keyword as slug............."
+            placeholder="Enter the search keyword as slug....."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onPressEnter={handleSearch}
@@ -204,7 +253,7 @@ const Categories = () => {
           )}
         </Space.Compact>
         <Button type="primary" onClick={() => setModalCreateCategory(true)}>
-          Add cateogy
+          Create Category
         </Button>
       </div>
       <Table
@@ -228,7 +277,7 @@ const Categories = () => {
       <ModalCreateCategories
         form={form}
         loading={loading}
-        title={selectedCategory ? "Edit Category" : "Add Category"}
+        title={selectedCategory ? "Edit Category" : "Create Category"}
         isModalOpen={modalCreateCategory}
         handleCancel={handelCloseModal}
         handleOk={handleCreateCategory}

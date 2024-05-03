@@ -27,7 +27,7 @@ const ModalCreateAdmins = ({
   };
   useEffect(() => {
     if (selectedUser) getUser();
-  }, [selectedUser]);
+  }, [selectedUser, form]);
   return (
     <Modal
       title={null}
@@ -36,7 +36,6 @@ const ModalCreateAdmins = ({
       loading={loading}
       onCancel={handleCancel}
       width={600}
-      style={{ top: 60 }}
     >
       <div className="text-center text-xl font-bold">
         <h2>{title}</h2>
@@ -110,7 +109,7 @@ const ModalCreateAdmins = ({
           ]}
         >
           <Select placeholder="--Select role--">
-            <Select.Option value="customer">Customer</Select.Option>
+            <Select.Option value="admin">Admin</Select.Option>
           </Select>
         </Form.Item>
 

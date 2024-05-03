@@ -12,7 +12,6 @@ const ModalCreateCategories = ({
   handleOk,
   selectedCategory,
 }) => {
-  const [name, setName] = useState("");
   const [file, setFile] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
 
@@ -34,7 +33,7 @@ const ModalCreateCategories = ({
     if (selectedCategory) {
       getCategory();
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, form]);
 
   const onFinish = async (values) => {
     try {
@@ -45,7 +44,7 @@ const ModalCreateCategories = ({
       message.error(
         selectedCategory
           ? "Failed to update category"
-          : "Failed to add new category"
+          : "Failed to create category"
       );
     }
   };
@@ -58,7 +57,6 @@ const ModalCreateCategories = ({
       confirmLoading={loading}
       onCancel={handleCancel}
       width={600}
-      style={{ top: 60 }}
     >
       <div className="text-center text-xl font-bold">
         <h2>{title}</h2>
@@ -74,7 +72,6 @@ const ModalCreateCategories = ({
         <Form.Item
           label="Name"
           name="name"
-          initialValue={name}
           style={{ marginTop: 20, marginBottom: 10 }}
           rules={[
             {
@@ -89,7 +86,7 @@ const ModalCreateCategories = ({
         <Form.Item
           label="Image"
           name="image"
-          style={{ marginBottom: 10 }}
+          style={{ marginTop: 20, marginBottom: 10 }}
           rules={[
             {
               required: true,
@@ -102,11 +99,12 @@ const ModalCreateCategories = ({
             beforeUpload={() => false}
             maxCount={1}
             listType="picture"
+            accept="image/*"
             onChange={(value) => {
               setFile(value.fileList[0]?.originFileObj);
             }}
           >
-            <Button icon={<UploadOutlined />}>Click to Upload Image</Button>
+            <Button icon={<UploadOutlined />}>Click to upload image</Button>
           </Upload>
         </Form.Item>
         {selectedCategory && imageUrl && (
@@ -125,7 +123,7 @@ const ModalCreateCategories = ({
             htmlType="submit"
             className="mb-2"
           >
-            {selectedCategory ? "Edit Category" : "Add Category"}
+            {selectedCategory ? "Edit Category" : "Create Category"}
           </Button>
         </div>
       </Form>

@@ -1,7 +1,7 @@
 import React from "react";
 import DashboardStatsGrid from "../components/DashboardStatsGrid";
 import TransactionChart from "../components/shared/TransactionChart";
-import BuyerProfileChart from "../components/BuyerProfileChart";
+import BuyerProfileChart from "../components/shared/BuyerProfileChart";
 import RecentOrders from "../components/RecentOrders";
 import PopularProducts from "../components/PopularProducts";
 

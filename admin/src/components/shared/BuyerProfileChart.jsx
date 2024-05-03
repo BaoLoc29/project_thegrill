@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { getAgeUser } from "../services/user";
-// const data = [
-//   { name: "Người lớn", value: 540 },
-//   { name: "Trẻ em", value: 620 },
-//   { name: "Trung Niên", value: 210 },
-// ];
+import { getAgeUser } from "../../services/user";
 const RADIAN = Math.PI / 180;
 const COLORS = ["#00C49F", "#FFBB28", "#FF8042"];
 

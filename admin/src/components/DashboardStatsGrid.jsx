@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { IoBagHandle, IoPeople, IoCart } from "react-icons/io5";
 import { RiAdminFill } from "react-icons/ri";
-
+import { getAllProduct } from "../services/product";
 import { getAllUser } from "../services/user";
 function DashboardStatsGrid() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [countProduct, setCountProduct] = useState(0);
   const getUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -21,9 +21,20 @@ function DashboardStatsGrid() {
     }
   }, []);
 
+  const getProductCount = useCallback(async () => {
+    try {
+      const products = await getAllProduct();
+      setCountProduct(products.data.countProduct);
+      console.log(countProduct);
+    } catch (error) {
+      console.error("Error fetching product count:", error);
+    }
+  }, []);
+
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    getProductCount();
+  }, [getUsers, getProductCount]);
 
   // Đếm số lượng người dùng theo vai trò
   const adminCount = users
@@ -44,8 +55,10 @@ function DashboardStatsGrid() {
             Total Product
           </span>
           <div className="flex items-center">
-            <strong className="text-xl text-gray-700 font-semibold">999</strong>
-            <span className="text-sm text-green-500 pl-2">+234</span>
+            <strong className="text-xl text-gray-700 font-semibold">
+              {countProduct}
+            </strong>
+            <span className="text-sm text-green-500 pl-2">+{countProduct}</span>
           </div>
         </div>
       </BoxWrapper>

@@ -18,7 +18,6 @@ export default function Header() {
     localStorage.removeItem("user");
     // Chuyển hướng về trang đăng nhập
     navigate("/");
-    window.location.reload();
   };
   return (
     <div className="bg-white h-16 px-4 flex items-center border-b border-gray-200 justify-between">

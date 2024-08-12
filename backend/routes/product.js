@@ -5,7 +5,7 @@ import { createProduct, getPagingProduct, editProduct, deleteProduct, searchProd
 import upload from "../middlewares/upload.js";
 
 const router = express.Router();
-router.get("/get-all-product", authentication, getAllProduct)
+router.get("/", getAllProduct)
 router.post("/create-product", authentication, upload.single("image"), getCategoryName, createProduct);
 router.put("/:id", authentication, upload.single("image"), getCategoryName, editProduct)
 router.get("/get-paging-product", authentication, getPagingProduct)

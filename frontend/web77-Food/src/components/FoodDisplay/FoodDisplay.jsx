@@ -1,29 +1,43 @@
-import React, { useContext } from "react";
+import React, { useState, useEffect } from "react";
 import "./FoodDisplay.css";
-import { StoreContext } from "../../context/StoreContext";
-import FoodItem from "../FoodItem/FoodItem";
+import { getAllProduct } from "../../services/product";
+import FoodItem from "../FoodItem/FoodItem"; // Import FoodItem
 
-const FoodDisplay = ({ category }) => {
-  const { food_list } = useContext(StoreContext);
+const FoodDisplay = () => {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    getAllProductsFromAPI();
+  }, []);
+
+  const getAllProductsFromAPI = async () => {
+    try {
+      const response = await getAllProduct();
+      console.log("API response:", response);
+      if (response && response.data && response.data.result) {
+        setProducts(response.data.result);
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   return (
     <div className="food-display" id="food-display">
       <h2>Top dishes near you</h2>
       <div className="food-display-list">
-        {food_list.map((item, index) => {
-          if (category === "All" || category === item.category) {
-            return (
-              <FoodItem
-                key={index}
-                id={item._id}
-                name={item.name}
-                description={item.description}
-                price={item.price}
-                image={item.image}
-              />
-            );
-          }
-        })}
+        {products.map((product) => (
+          <FoodItem
+            key={product.id}
+            id={product._id}
+            name={product.name}
+            description={product.description}
+            price={product.price}
+            image={product.image}
+          />
+        ))}
       </div>
     </div>
   );

@@ -104,7 +104,7 @@ const ModalCreateCategories = ({
               setFile(value.fileList[0]?.originFileObj);
             }}
           >
-            <Button icon={<UploadOutlined />}>Click to upload image</Button>
+            <Button icon={<UploadOutlined />}>Upload image</Button>
           </Upload>
         </Form.Item>
         {selectedCategory && imageUrl && (

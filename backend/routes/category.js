@@ -5,7 +5,7 @@ import upload from "../middlewares/upload.js";
 
 const router = express.Router()
 router.get("/get-paging-category", authentication, getPagingCategory)
-router.get("/getAllCategory", getAllCategory)
+router.get("/", getAllCategory)
 router.get("/:id", authentication, getCategoryById)
 router.post("/create-category", authentication, upload.single("image"), createCategory)
 router.put("/:id", authentication, upload.single("image"), editCategory)

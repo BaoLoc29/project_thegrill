@@ -276,7 +276,7 @@ const Employees = () => {
         </Space.Compact>
 
         <Button type="primary" onClick={() => setModalCreateUser(true)}>
-          Add Admin
+          Add new Admin
         </Button>
       </div>
       <Table

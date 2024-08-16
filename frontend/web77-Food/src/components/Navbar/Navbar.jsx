@@ -8,8 +8,6 @@ import {
   removeUserFromLocalStorage,
 } from "../../utils/localstorage";
 
-import { HiOutlineSearch } from "react-icons/hi";
-
 const Navbar = ({ setShowLogin }) => {
   const [menu, setMenu] = useState("menu");
   const { getTotalCartAmount } = useContext(StoreContext);
